@@ -69,5 +69,101 @@ class TestBaseModel_instantiation(unittest.TestCase):
         self.assertEqual(bm.updated_at, dat)
 
 
+class TestBaseModelSave(unittest.TestCase):
+    """Testing save method of the BaseModel class."""
+
+    @classmethod
+    def setUp(self):
+        try:
+            os.rename("file.json", "temp")
+        except IOError:
+            pass
+
+    @classmethod
+    def tearDown(self):
+        try:
+            os.remove("file.json")
+        except IOError:
+            pass
+        try:
+            os.rename("temp", "file.json")
+        except IOError:
+            pass
+
+    def test_one(self):
+        base_m = BaseModel()
+        sleep(0.06)
+        first_updated_at = base_m.updated_at
+        base_m.save()
+        self.assertLess(first_updated_at, base_m.updated_at)
+
+    def test_two(self):
+        base_m = BaseModel()
+        sleep(0.06)
+        first_updated_at = base_m.updated_at
+        base_m.save()
+        second_updated_at = base_m.updated_at
+        self.assertLess(first_updated_at, second_updated_at)
+        sleep(0.06)
+        base_m.save()
+        self.assertLess(second_updated_at, base_m.updated_at)
+
+    def test_save_with_arg(self):
+        base_m = BaseModel()
+        with self.assertRaises(TypeError):
+            base_m.save(None)
+
+    def test_updates_file(self):
+        base_mu = BaseModel()
+        base_mu.save()
+        bmid = "BaseModel." + base_mu.id
+        with open("file.json", "r") as f:
+            self.assertIn(bmid, f.read())
+
+
+class TestToDict(unittest.TestCase):
+    """Testing to_dict method of the BaseModel class."""
+
+    def test_to_dict_type(self):
+        base_m = BaseModel()
+        self.assertTrue(dict, type(base_m.to_dict()))
+
+    def test_contains_correct_keys(self):
+        base_m = BaseModel()
+        self.assertIn("id", base_m.to_dict())
+        self.assertIn("created_at", base_m.to_dict())
+        self.assertIn("updated_at", base_m.to_dict())
+        self.assertIn("__class__", base_m.to_dict())
+
+    def test_contains_added_attributes(self):
+        base_m = BaseModel()
+        base_m.name = "Test"
+        base_m.my_number = 98
+        self.assertIn("name", base_m.to_dict())
+        self.assertIn("my_number", base_m.to_dict())
+
+    def test_to_dict_output(self):
+        dt = datetime.today()
+        bmo = BaseModel()
+        bmo.id = "12345"
+        bmo.created_at = bmo.updated_at = dt
+        tdict = {
+            'id': '12345',
+            '__class__': 'BaseModel',
+            'created_at': dt.isoformat(),
+            'updated_at': dt.isoformat()
+        }
+        self.assertDictEqual(bmo.to_dict(), tdict)
+
+    def test_contrast_dunder_dict(self):
+        bmc = BaseModel()
+        self.assertNotEqual(bmc.to_dict(), bmc.__dict__)
+
+    def test_with_arg(self):
+        bm_arg = BaseModel()
+        with self.assertRaises(TypeError):
+            bm_arg.to_dict(None)
+
+
 if __name__ == "__main__":
     unittest.main()
