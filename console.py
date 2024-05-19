@@ -16,11 +16,11 @@ class HBNBCommand(cmd.Cmd):
             "User"
             }
 
-    def define_quit(self, arg):
+    def do_quit(self, arg):
         """Quit command to exit the program."""
         return True
 
-    def define_EOF(self, arg):
+    def do_EOF(self, arg):
         """EOF signal to exit the program."""
         print("")
         return True
