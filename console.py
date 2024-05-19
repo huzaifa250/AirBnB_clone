@@ -7,6 +7,25 @@ from models import storage
 from models.base_model import BaseModel
 
 
+def parse(arg):
+    """split the input while keeping the contents within curly braces"""
+    curlybraces = re.search(r"\{(.*?)\}", arg)
+    brackets = re.search(r"\[(.*?)\]", arg)
+    if curlybraces is None:
+        if brackets is None:
+            return [i.strip(",") for i in split(arg)]
+        else:
+            hnpl = split(arg[:brackets.span()[0]])
+            retl = [i.strip(",") for i in hnpl]
+            retl.append(brackets.group())
+            return retl
+    else:
+        hnpl = split(arg[:curlybraces.span()[0]])
+        retl = [i.strip(",") for i in hnpl]
+        retl.append(curlybraces.group())
+        return retl
+
+
 class HBNBCommand(cmd.Cmd):
     """Defines command interpreter"""
 
@@ -33,42 +52,46 @@ class HBNBCommand(cmd.Cmd):
         """Splits the argument string by spaces"""
         return arg.split()
 
-    def parse(arg):
-        """split the input while keeping the contents within curly braces"""
-        curlybraces = re.search(r"\{(.*?)\}", arg)
-        brackets = re.search(r"\[(.*?)\]", arg)
-        if curlybraces is None and brackets is None:
-            return [inp.strip(",") for inp in split(arg)]
-        elif brackets is not None:
-            # handle input up to the point where brackets start
-            hnpl = split(arg[:brackets.span()[0]])
-            # remove any trailing commas in hnpl
-            retl = [inp.strip(",") for inp in hnpl]
-            retl.append(brackets.group())
-            return retl
-        else:
-            hnpl = split(arg[:curlybraces.span()[0]])
-            retl = [inp.strip(",") for inp in hnpl]
-            retl.append(curlybraces.group())
-            return retl
+    def default(self, arg):
+        """Default cmd module when input is invalid"""
+        # map commmnad to thir methods
+        cmddict = {
+                "all": self.do_all,
+                "show": self.show,
+                "destory": self.destory,
+                "count": self.count,
+                "create": self.create,
+                "update": self.update
+                }
+        match = re.search(r"\.", arg)
+        if match is not None:
+            argl = [arg[:match.span()[0]], arg[match.span()[1]:]]
+        match = re.search(r"\((.*?)\)", argl[1])
+        if match is not None:
+            command = [argl[1][:match.span()[0]], match.group()[1:-1]]
+            if command[0] in cmddict.keys():
+                call = "{} {}".format(argl[0], command[1])
+                return cmddict[command[0]](call)
+        print("*** Unknown syntax: {}".format(arg))
+        return False
 
     def do_create(self, arg):
-        """Create a new class instance and print its id."""
+        """Create a new class instance and print its id.
+        Usage: create <class> <id>
+        """
         argl = parse(arg)
         if len(argl) == 0:
             print("** class name missing **")
         elif argl[0] not in HBNBCommand.__classes:
             print("** class doesn't exist **")
         else:
-            #  map class names(as strings) to their corresponding class
-            cls = HBNBCommand.__classes[argl[0]]
-            new_instance = cls()
-            print(new_instance.id)
-            new_instance.save()
+            print(eval(argl[0])().id)
             storage.save()
 
     def do_show(self, arg):
-        """ Display string representation of a class instance"""
+        """ Display string representation of a class instance
+        Usage: show <class> <id> or <class>.show(<id>)
+        """
         argl = parse(arg)
         objdict = storage.all()
         if len(argl) == 0:
@@ -83,7 +106,9 @@ class HBNBCommand(cmd.Cmd):
             print(objdict["{}.{}".format(argl[0], argl[1])])
 
     def do_destroy(self, arg):
-        """Delete a class instance fro given id"""
+        """Delete a class instance fro given id
+        Usage: destroy <class> <id> or <class>.destroy(<id>)
+        """
         argl = parse(arg)
         objdict = storage.all()
         if len(argl) == 0:
@@ -99,7 +124,9 @@ class HBNBCommand(cmd.Cmd):
             storage.save()
 
     def do_all(self, arg):
-        """Display string representations of all instances """
+        """Display string representations of all instances
+        Usage: all or all <class> or <class>.all()
+        """
         argl = parse(arg)
         if len(argl) > 0 and argl[0] not in HBNBCommand.__classes:
             print("** class doesn't exist **")
