@@ -68,11 +68,11 @@ class HBNBCommand(cmd.Cmd):
         # map commmnad to thir methods
         cmddict = {
                 "all": self.do_all,
-                "show": self.show,
-                "destory": self.destory,
-                "count": self.count,
-                "create": self.create,
-                "update": self.update
+                "show": self.do_show,
+                "destory": self.do_destory,
+                "count": self.do_count,
+                "create": self.do_create,
+                "update": self.do_update
                 }
         match = re.search(r"\.", arg)
         if match is not None:
