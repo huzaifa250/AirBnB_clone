@@ -120,19 +120,21 @@ class HBNBCommand(cmd.Cmd):
         """Delete a class instance from given id
         Usage: destroy <class> <id> or <class>.destroy(<id>)
         """
-        argl = parse(arg)
-        objdict = storage.all()
-        if len(argl) == 0:
+        args = shlex.split(arg)
+        if len(args) == 0:
             print("** class name missing **")
-        elif argl[0] not in HBNBCommand.__classes:
-            print("** class doesn't exist **")
-        elif len(argl) == 1:
-            print("** instance id missing **")
-        elif "{}.{}".format(argl[0], argl[1]) not in objdict.keys():
-            print("** no instance found **")
+        elif args[0] in classes:
+            if len(args) > 1:
+                key = args[0] + "." + args[1]
+                if key in models.storage.all():
+                    models.storage.all().pop(key)
+                    models.storage.save()
+                else:
+                    print("** no instance found **")
+            else:
+                print("** instance id missing **")
         else:
-            del objdict["{}.{}".format(argl[0], argl[1])]
-            storage.save()
+            print("** class doesn't exist **")
 
     def do_all(self, arg):
         """Display string representations of all instances
@@ -216,5 +218,6 @@ class HBNBCommand(cmd.Cmd):
         print(count)
 
 
+
 if __name__ == '__main__':
-    HBNBCommand().cmdloop()
+	HBNBCommand().cmdloop()
