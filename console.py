@@ -136,6 +136,11 @@ class HBNBCommand(cmd.Cmd):
         else:
             print("** class doesn't exist **")
 
+    def help_destroy(self):
+        """ Help information for the destroy command """
+        print("Delete an individual instance of a class")
+        print("[Usage]: destroy <className> <objectId>\n")
+
     def do_all(self, arg):
         """Display string representations of all instances
         Usage: all or all <class> or <class>.all()
